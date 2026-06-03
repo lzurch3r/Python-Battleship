@@ -5,31 +5,41 @@ def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     gameOver = False
     isPlayer1Turn = True
-    BOARD_PLAYER_1 = buildBoard(True)
-    BOARD_PLAYER_2 = buildBoard(True)
-    hiddenBoardPlayer1 = buildBoard(False)
-    hiddenBoardPlayer2 = buildBoard(False)
+
+    SHIPS = [("carrier",    (5, 'C')),  #Carrier
+             ("battleship", (4, 'B')),  #Battleship
+             ("cruiser",    (3, 'R')),  #Cruiser
+             ("submarine",  (2, 'S')),  #Submarine
+             ("destroyer",  (2, 'D'))]  #Destroyer
+    BOARD_PLAYER_1 = buildBoard(True, SHIPS)
+    BOARD_PLAYER_2 = buildBoard(True, SHIPS)
+    hiddenBoardPlayer1 = buildBoard(False, SHIPS)
+    hiddenBoardPlayer2 = buildBoard(False, SHIPS)
 
     while not gameOver:
         if isPlayer1Turn:
             print("Player 1's turn:")
             displayBoard(hiddenBoardPlayer1)
-            coordinates = promptCoordinates()
-            hiddenBoardPlayer1 = fire(BOARD_PLAYER_1, hiddenBoardPlayer1, coordinates)
+            #coordinates = promptCoordinates()
+            #DEBUGGING PURPOSES ONLY: PRESET COORDINATES
+            row = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+            col = ['0', '1', '2', '3', '4', '5', '6', '7']
+            coordinates = (random.choice(row), random.choice(col))
+            hiddenBoardPlayer1 = fire(BOARD_PLAYER_1, SHIPS, hiddenBoardPlayer1, coordinates)
             displayBoard(hiddenBoardPlayer1)
-            print("\n")
-            isPlayer1Turn = False
+            print("")
+            #isPlayer1Turn = False
         else:
             print("Player 2's turn:")
             displayBoard(hiddenBoardPlayer2)
             coordinates = promptCoordinates()
-            hiddenBoardPlayer2 = fire(BOARD_PLAYER_2, hiddenBoardPlayer2, coordinates)
+            hiddenBoardPlayer2 = fire(BOARD_PLAYER_2, SHIPS, hiddenBoardPlayer2, coordinates)
             displayBoard(hiddenBoardPlayer2)
-            print("\n")
+            print("")
             isPlayer1Turn = True
 
-def buildBoard(randomizeShips):
-    boardMatrix = [['-', '-', '-', '-', '-', '-', '-', '-'],
+def buildBoard(randomizeShips, SHIPS):
+    BOARD_MATRIX = [['-', '-', '-', '-', '-', '-', '-', '-'],
                    ['-', '-', '-', '-', '-', '-', '-', '-'],
                    ['-', '-', '-', '-', '-', '-', '-', '-'],
                    ['-', '-', '-', '-', '-', '-', '-', '-'],
@@ -39,20 +49,14 @@ def buildBoard(randomizeShips):
                    ['-', '-', '-', '-', '-', '-', '-', '-']]
     
     if randomizeShips:
-        return randomizeBoard(boardMatrix)
+        return randomizeBoard(BOARD_MATRIX, SHIPS)
 
-    return boardMatrix
+    return BOARD_MATRIX
 
-def randomizeBoard(matrix):
+def randomizeBoard(matrix, SHIPS):
     localMatrix = matrix
-    ships = [("carrier",    (5, 'C')),  #Carrier
-             ("battleship", (4, 'B')),  #Battleship
-             ("cruiser",    (3, 'R')),  #Cruiser
-             ("submarine",  (2, 'S')),  #Submarine
-             ("destroyer",  (2, 'D'))]  #Destroyer
 
-
-    for ship in ships:
+    for ship in SHIPS:
         localMatrix = placeShip(ship, localMatrix)
 
     return localMatrix
@@ -121,7 +125,7 @@ def promptCoordinates():
                 return (row, col)
         print("Invalid input. Please enter coordinates in the format 'A0', 'B3', etc.")
 
-def fire(BOARD, hiddenBoard, coordinates):
+def fire(BOARD, SHIPS, hiddenBoard, coordinates):
     convertedRow = ord(coordinates[0]) - ord('A')
     convertedCol = int(coordinates[1])
     row = coordinates[0]
@@ -130,10 +134,36 @@ def fire(BOARD, hiddenBoard, coordinates):
     if BOARD[convertedRow][convertedCol] != '-':
         print(f"Hit at {row}{col}!")
         hiddenBoard[convertedRow][convertedCol] = 'X'
+        checkSunkShip(BOARD, SHIPS, hiddenBoard, convertedRow, convertedCol)
+        if checkWin(BOARD, hiddenBoard):
+            print("All ships have been sunk! Game over.")
+            exit()
     else:
         print(f"Miss at {row}{col}.")
         hiddenBoard[convertedRow][convertedCol] = 'O'
 
     return hiddenBoard
+
+def checkWin(BOARD, hiddenBoard):
+    for i in range(len(BOARD)):
+        for j in range(len(BOARD[i])):
+            if BOARD[i][j] != '-' and hiddenBoard[i][j] != 'X':
+                return False
+    displayBoard(BOARD)
+    return True
+
+def checkSunkShip(BOARD, SHIPS, hiddenBoard, row, col):
+    shipType = BOARD[row][col]
+    for i in range(len(BOARD)):
+        for j in range(len(BOARD[i])):
+            if BOARD[i][j] == shipType and hiddenBoard[i][j] != 'X':
+                return False
+    print(f"You sunk a {getShipName(SHIPS, shipType)}!")
+    return True
+
+def getShipName(SHIPS, shipType):
+    for ship in SHIPS:
+        if ship[1][1] == shipType:
+            return ship[0]
 
 main()
