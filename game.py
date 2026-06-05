@@ -20,15 +20,15 @@ def main():
         if isPlayer1Turn:
             print("Player 1's turn:")
             displayBoard(hiddenBoardPlayer1)
-            #coordinates = promptCoordinates()
+            coordinates = promptCoordinates()
             #DEBUGGING PURPOSES ONLY: PRESET COORDINATES
-            row = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-            col = ['0', '1', '2', '3', '4', '5', '6', '7']
-            coordinates = (random.choice(row), random.choice(col))
+            #row = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+            #col = ['0', '1', '2', '3', '4', '5', '6', '7']
+            #coordinates = (random.choice(row), random.choice(col))
             hiddenBoardPlayer1 = fire(BOARD_PLAYER_1, SHIPS, hiddenBoardPlayer1, coordinates)
             displayBoard(hiddenBoardPlayer1)
             print("")
-            #isPlayer1Turn = False
+            isPlayer1Turn = False
         else:
             print("Player 2's turn:")
             displayBoard(hiddenBoardPlayer2)
