@@ -1,8 +1,20 @@
 import os
+import sys
 import random
+import server
 
 def main():
+
+    if len(sys.argv) != 3:
+        print(f"Usage: {sys.argv[0]} <host> <port>")
+        sys.exit(1)
+    
+    # Clear console in terminal
     os.system('cls' if os.name == 'nt' else 'clear')
+    
+    # Set up server with <host> <port>
+    server.run_server(sys.argv[1], int(sys.argv[2]))
+
     gameOver = False
     isPlayer1Turn = True
 
