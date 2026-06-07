@@ -4,7 +4,6 @@ import sys
 import types
 
 sel = selectors.DefaultSelector()
-messages = [b"Here we are", b"There they are"]
 
 def start_connections(host, port, num_conns):
     server_addr = (host, port)
@@ -17,10 +16,9 @@ def start_connections(host, port, num_conns):
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         data = types.SimpleNamespace(
             connid=connid,
-            msg_total=sum(len(m) for m in messages),
             recv_total=0,
-            messages=messages.copy(),
             outb=b"",
+            action="join"
         )
         sel.register(sock, events, data=data)
 
@@ -61,7 +59,10 @@ start_connections(host, int(port), int(num_conns))
 
 try:
     while True:
-        user_input = input("Enter coordinates: ").encode()
+
+        #user_input = input("Enter coordinates: ").encode()
+        user_input="DEBUG"
+
         #print(f"Processing events")
         events = sel.select(timeout=1)
         #print(f"Checking for valid events")

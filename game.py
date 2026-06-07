@@ -1,28 +1,21 @@
 import os
 import sys
 import random
-import server
+
+SHIPS = [("carrier",    (5, 'C')),  #Carrier
+         ("battleship", (4, 'B')),  #Battleship
+         ("cruiser",    (3, 'R')),  #Cruiser
+         ("submarine",  (2, 'S')),  #Submarine
+         ("destroyer",  (2, 'D'))]  #Destroyer
 
 def main():
 
-    if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} <host> <port>")
-        sys.exit(1)
-    
     # Clear console in terminal
     os.system('cls' if os.name == 'nt' else 'clear')
-    
-    # Set up server with <host> <port>
-    server.run_server(sys.argv[1], int(sys.argv[2]))
 
     gameOver = False
     isPlayer1Turn = True
 
-    SHIPS = [("carrier",    (5, 'C')),  #Carrier
-             ("battleship", (4, 'B')),  #Battleship
-             ("cruiser",    (3, 'R')),  #Cruiser
-             ("submarine",  (2, 'S')),  #Submarine
-             ("destroyer",  (2, 'D'))]  #Destroyer
     BOARD_PLAYER_1 = buildBoard(True, SHIPS)
     BOARD_PLAYER_2 = buildBoard(True, SHIPS)
     hiddenBoardPlayer1 = buildBoard(False, SHIPS)
@@ -144,24 +137,21 @@ def fire(BOARD, SHIPS, hiddenBoard, coordinates):
     col = coordinates[1]
 
     if BOARD[convertedRow][convertedCol] != '-':
-        print(f"Hit at {row}{col}!")
         hiddenBoard[convertedRow][convertedCol] = 'X'
-        checkSunkShip(BOARD, SHIPS, hiddenBoard, convertedRow, convertedCol)
-        if checkWin(BOARD, hiddenBoard):
-            print("All ships have been sunk! Game over.")
-            exit()
+        if checkSunkShip(BOARD, SHIPS, hiddenBoard, convertedRow, convertedCol):
+            if checkWin(BOARD, hiddenBoard):
+                return hiddenBoard, "win", getShipName(SHIPS, BOARD[convertedRow][convertedCol])
+            return hiddenBoard, "sunk", getShipName(SHIPS, BOARD[convertedRow][convertedCol])
+        return hiddenBoard, "hit", None
     else:
-        print(f"Miss at {row}{col}.")
         hiddenBoard[convertedRow][convertedCol] = 'O'
-
-    return hiddenBoard
+        return hiddenBoard, "miss", None
 
 def checkWin(BOARD, hiddenBoard):
     for i in range(len(BOARD)):
         for j in range(len(BOARD[i])):
             if BOARD[i][j] != '-' and hiddenBoard[i][j] != 'X':
                 return False
-    displayBoard(BOARD)
     return True
 
 def checkSunkShip(BOARD, SHIPS, hiddenBoard, row, col):
@@ -178,4 +168,5 @@ def getShipName(SHIPS, shipType):
         if ship[1][1] == shipType:
             return ship[0]
 
-main()
+if __name__ == "__main__":
+    main()
