@@ -8,41 +8,6 @@ SHIPS = [("carrier",    (5, 'C')),  #Carrier
          ("submarine",  (2, 'S')),  #Submarine
          ("destroyer",  (2, 'D'))]  #Destroyer
 
-def main():
-
-    # Clear console in terminal
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-    gameOver = False
-    isPlayer1Turn = True
-
-    BOARD_PLAYER_1 = buildBoard(True, SHIPS)
-    BOARD_PLAYER_2 = buildBoard(True, SHIPS)
-    hiddenBoardPlayer1 = buildBoard(False, SHIPS)
-    hiddenBoardPlayer2 = buildBoard(False, SHIPS)
-
-    while not gameOver:
-        if isPlayer1Turn:
-            print("Player 1's turn:")
-            displayBoard(hiddenBoardPlayer1)
-            coordinates = promptCoordinates()
-            #DEBUGGING PURPOSES ONLY: PRESET COORDINATES
-            #row = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-            #col = ['0', '1', '2', '3', '4', '5', '6', '7']
-            #coordinates = (random.choice(row), random.choice(col))
-            hiddenBoardPlayer1 = fire(BOARD_PLAYER_1, SHIPS, hiddenBoardPlayer1, coordinates)
-            displayBoard(hiddenBoardPlayer1)
-            print("")
-            isPlayer1Turn = False
-        else:
-            print("Player 2's turn:")
-            displayBoard(hiddenBoardPlayer2)
-            coordinates = promptCoordinates()
-            hiddenBoardPlayer2 = fire(BOARD_PLAYER_2, SHIPS, hiddenBoardPlayer2, coordinates)
-            displayBoard(hiddenBoardPlayer2)
-            print("")
-            isPlayer1Turn = True
-
 def buildBoard(randomizeShips, SHIPS):
     BOARD_MATRIX = [['-', '-', '-', '-', '-', '-', '-', '-'],
                    ['-', '-', '-', '-', '-', '-', '-', '-'],
