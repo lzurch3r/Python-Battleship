@@ -77,7 +77,7 @@ def handle_join(key, message):
             
             for player in players:
                 if player.data.player_id == current_turn:
-                    player.data.outb += json.dumps({"result": "your_turn"}).encode()
+                    player.data.outb += json.dumps({"player_name": player.data.name, "result": "your_turn", "board": player.data.hidden_board}).encode()
                 else:
                     player.data.outb += json.dumps({"result": "wait"}).encode()
 
@@ -94,9 +94,16 @@ def handle_fire(key, message):
             opponent.data.outb += json.dumps({"result": "lose"}).encode()
         else:
             # flip turn and send your_turn/end_turn as normal
-            key.data.outb += json.dumps({"result": "{result}", "ship": "{ship}"}).encode()
+            key.data.outb += json.dumps({"result": result, "ship": ship, "board": key.data.hidden_board}).encode()
             current_turn = 1 if current_turn == 2 else 2 
-            opponent.data.outb += json.dumps({"result": "your_turn"}).encode()
+            opponent.data.outb += json.dumps({
+                "player_name": opponent.data.name,
+                "opponent_name": key.data.name,
+                "action": "opponent_shot",
+                "coord": message["coord"],
+                "result": "your_turn",
+                "board": opponent.data.hidden_board
+                }).encode()
     else:
         players[player_id - 1].data.outb += json.dumps({"result": "wait"}).encode()
 

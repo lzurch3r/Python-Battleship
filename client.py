@@ -2,10 +2,13 @@ import selectors
 import socket
 import sys
 import types
+import json
+
+import game
 
 sel = selectors.DefaultSelector()
 
-def start_connections(host, port, num_conns):
+def start_connections(host, port, num_conns, name):
     server_addr = (host, port)
     for i in range(0, num_conns):
         connid = i + 1
@@ -16,13 +19,11 @@ def start_connections(host, port, num_conns):
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         data = types.SimpleNamespace(
             connid=connid,
-            recv_total=0,
-            outb=b"",
-            action="join"
+            outb=json.dumps({"action": "join", "name": f"{name}"}).encode()
         )
         sel.register(sock, events, data=data)
 
-def service_connection(key, mask, user_input):
+def service_connection(key, mask):
     #print(f"    Creating sock variable")
     sock = key.fileobj
     #print(f"    Creating data variable")
@@ -32,36 +33,66 @@ def service_connection(key, mask, user_input):
         recv_data = sock.recv(1024)
         if recv_data:
             print(f"Received {recv_data!r} from connection {data.connid}")
-            data.recv_total += len(recv_data)
-        if not recv_data or data.recv_total == data.msg_total:
+            response = json.loads(recv_data.decode())
+            result = response.get("result")
+            
+            if result == "wait":
+                print("Waiting for opponent...")
+            elif result == "your_turn":
+                game.clearConsole()
+                if response.get("action") == "opponent_shot":
+                    print(f"{response["opponent_name"]} fired at {response["coord"][0]+response["coord"][1]}!")
+                if response.get("board"):
+                    game.displayBoard(response["board"])
+                print(f"{response["player_name"]}, it's your turn!")
+                user_input = game.promptCoordinates()
+                data.outb = json.dumps({"action": "fire", "coord": user_input}).encode()
+
+                sel.modify(sock, selectors.EVENT_READ | selectors.EVENT_WRITE, data=data)
+            elif result in ["hit", "miss", "sunk"]:
+                game.clearConsole()
+                print(f"Shot result: {result.upper()}!")
+                game.displayBoard(response["board"])
+                if response.get("ship"):
+                    print(f"You sunk their {response['ship']}!")
+                print("Waiting for opponent's turn...")
+            elif result == "win":
+                print("CONGRATULATIONS! You won the game!")
+                sel.unregister(sock)
+                sock.close()
+            elif result == "lose":
+                print("GAME OVER. Your fleet has been destroyed.")
+                sel.unregister(sock)
+                sock.close()
+        if not recv_data:
             print(f"Closing connection {data.connid}")
             sel.unregister(sock)
             sock.close()
     #print(f"    Checking for EVENT_WRITE")
     if mask & selectors.EVENT_WRITE:
-        #print(f"        Checking for data.messages")
-        if not data.outb and data.messages:
-            #print(f"            Checking for data failure")
-            data.outb = data.messages.pop(0)
-        if data.outb: # THIS IS WHERE YOU WANT YOUR CODE
+        #print(f"        Checking for data.messages")   
+        if data.outb:
             #print(f"            Checking for data success")
             print(f"Sending {data.outb!r} to connection {data.connid}")
-            data.outb = user_input
             sent = sock.send(data.outb)
             data.outb = data.outb[sent:]
+
+            if not data.outb:
+                sel.modify(sock, selectors.EVENT_READ, data=data)    
 
 if len(sys.argv) != 4:
     print(f"Usage: {sys.argv[0]} <host> <port> <num_connections>")
     sys.exit(1)
 
+player_name = input("Enter your name: ")
 host, port, num_conns = sys.argv[1:4]
-start_connections(host, int(port), int(num_conns))
+start_connections(host, int(port), int(num_conns), player_name)
 
 try:
     while True:
 
         #user_input = input("Enter coordinates: ").encode()
-        user_input="DEBUG"
+        #user_input="DEBUG"
 
         #print(f"Processing events")
         events = sel.select(timeout=1)
@@ -70,7 +101,7 @@ try:
             #print(f"FOR loop for events")
             for key, mask in events:
                 #print(f"Connecting to server...")
-                service_connection(key, mask, user_input)
+                service_connection(key, mask)
         if not sel.get_map():
             #print(f"Couldn't find sel.get_map")
             break

@@ -168,5 +168,8 @@ def getShipName(SHIPS, shipType):
         if ship[1][1] == shipType:
             return ship[0]
 
+def clearConsole():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 if __name__ == "__main__":
     main()
